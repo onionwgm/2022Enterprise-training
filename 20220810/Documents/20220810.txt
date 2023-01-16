@@ -1,0 +1,55 @@
+20220810 OpenCV
+
+0. 回顾
+    TF2 tf.data.Dataset 
+        1. 生成 2 个 numpy ndarray | list 
+            1= 样本集特征矩阵
+                如果是图片：暂时生成含有所有图片名称的 一维 向量
+            2= 样本集标签向量
+                文本型的标签 -> 数值型标签（one-hot）
+                    文本型list -> unique（set/list/enuma../倒置=>dict(标签文本:index)）
+                        遍历 文本型list(原始) -> 数值编码形式标签向量
+        2. 封装为 dataset
+            tf.data.Dataset.from_tensor_slices() 参数要求：
+            1= 两个参数必须是放入 元组中， (第一个参数, 第二个参数)
+            2= 两个参数的第一个维度(维度=0|axis=0)的值必须相等
+        3. map() 
+            将保存在dataset中的第一个参数中的每一个文件名映射成读入的一张图片(表示数字图像的多维张量)
+      shuffle\batch_size 
+    model = TF2.keras.Sequential([
+        tf.keras.layers.
+                        Conv2D
+                            第一个输入层，给出输入的样本的大小描述
+                        Dense
+                            == activation
+                                中间层： relu
+                                输出层： softmax
+                        Maxpooling2D
+                        Flatten
+    ])
+    model.summary()
+    model.compile(  给出：
+        学习率: Adam
+        损失函数：
+        评价标准：
+    )
+    model.fit(tf.data.Dataset, epochs)
+
+1. OpenCV
+    1. 图片的读取与显示
+        -- 命名窗口
+    2. 图片复制
+    3. 摄像头操作
+        初始化：
+            1- 开启所有的摄像设备
+            2- 按照指定的媒体类型、打开指定序号的摄像设备
+            3- 忽略初始的 图片/图像/视频 信息
+            4- 设置摄像头参数
+        完成摄像回显
+      自行实现：完成摄像头拍照（按任意键完成图片的保存）
+    4. 绘制图形
+    5. 图片平滑处理
+    6. 灰度与二值化
+        一般，都是对灰度进行二值化
+    7. 边缘检测 
+    8. 等值线

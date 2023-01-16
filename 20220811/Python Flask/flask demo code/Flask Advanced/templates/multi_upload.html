@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+<body>
+    <h1>多文件上传</h1>
+    <form id="multiUploadFome" name="multiUploadFome" method="post" enctype="multipart/form-data" action="/file/multiupload/">
+        <p>
+            <label>文件</label>
+            <input type="file" multiple="" id="uploadFile" name="uploadFile[]" required/>
+        </p>
+        <p>
+            <button type="submit">上传</button>
+        </p>
+    </form>
+    {{ msg }}
+    <p>上传文件列表(点击下载)</p>
+    <ul>
+        {% for fileName in fileNames %}
+        <li><a href="/download/{{ fileName }}">{{ fileName }}</a></li>
+        {% endfor %}
+    </ul>
+</body>
+</html>

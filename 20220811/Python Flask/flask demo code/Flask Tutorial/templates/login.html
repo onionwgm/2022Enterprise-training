@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <!-- CSS静态资源的引用 -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css', _external=True) }}"/>
+</head>
+<body>
+    <h1>登录</h1>
+    <form id="loginForm" name="loginForm" method="post" action="/login/">
+        <p>
+            <label class="input_label">登录账号：</label>
+            <input class="input_data" type="text" id="account" name="account" value="{{ account }}" required/>
+        </p>
+        <p>
+            <label class="input_label">登录密码：</label>
+            <input class="input_data" type="password" id="password" name="password" required/>
+        </p>
+        <p>
+            <input type="checkbox" id="chkCookie" name="chkCookie" value="checked"/>记住我
+        </p>
+        <p>
+            <button class="btnsubmit" type="submit">马上登录</button>
+        </p>
+    </form>
+    <p>
+        {{ msg }}
+    </p>
+</body>
+</html>

@@ -1,0 +1,5 @@
+20220813 cnn 
+0. 回顾
+    dataset -> pd(hsv+sobel) -> cs -> mlp
+
+1. CR - tf1 cnn 

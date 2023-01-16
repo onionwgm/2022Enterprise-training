@@ -1,0 +1,58 @@
+20220808 
+
+0. 回顾 
+    1- 维度 - 轴
+        axis =0 =1
+        二维：
+            axis=0 行操作
+            axis=1 列操作
+    2- 拼接+堆叠
+        0- 生成
+        
+5. 张量的操作（2）：采样运算：索引+切片+提取
+    1. 索引 
+        tf_01[10]
+        tf_02[1][1] tf_02[1, 1]
+            tf_02[0]
+        tf_03[0][0][0] tf_03[0, 0, 0]
+            tf_03[0]
+            tf_03[0][0]
+    2. 切片 
+        在每个维度上，执行获取的连续数据的 起始、终止、步长
+            起始:终止:步长
+            每一个均可以省略
+    3. 提取 
+        采样不连续的多个
+        tf.gather(src_tensor, indices_list) -- 一个维度
+        tf.gather_nd(src_tensor, indices_list) -- 多个维度
+        
+x. 读入数据(s),生成张量
+    0. 读取数据集
+        数据读取三种方法：
+        1- 数据供给：在程序执行流程中，python读取并提供数据
+        2- 文件供给：从文件中读取数据
+        -- 共性：将数据放入 内存中 numpy 的 ndarray 
+        3- 预加载供给：在张量中预先保存所有的数据（适用小数据集）
+    -- 介绍：从内存、文件、内置数据集
+    1. 从内存中的numpy中生成张量
+        主要API 
+            tf.constant(numpy ndarray)
+            tf.convert_to_tensor(numpy ndarray)
+    2. 从文件读入数据(s)，放入内存中numpy，基于内存中numpy生成张量
+      -- 读入一张图片
+        PIL ： 读入、保存、显示
+      -- 读入一个csv
+    读入 numpy ndarray ==>> tensor
+    3. tf.data.Dataset（ 特征矩阵+标签向量 ++ 额外可以在神经网络中使用方法）
+        1- 特征矩阵+标签向量 -> 整体数据结构中
+        2- 整体数据结构中整体打乱/洗牌/shuffle
+            batch/epoch/iterator ==>? 作业
+          map
+        读取 data 中数据集到 dataset 中 
+            1- PIL + numpy 依次读入所有的图片 + 类别（所在文件夹名称）
+            2- dataset ==map()
+      dataset 是一个 iterator (列表引子)
+        tf.data.Dataset.from_tensor_slices 将样本集中每一个样本|按行拆分样本集
+            拆分为 一个一个的样本，放在列表中|迭代器中
+
+

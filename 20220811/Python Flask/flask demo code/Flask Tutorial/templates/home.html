@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <!-- CSS静态资源的引用 -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css', _external=True) }}"/>
+</head>
+<body>
+    <h1>欢迎页面</h1>
+    {% if account %}
+        <h2> 你好 {{ account }} <h2>
+    {% else %}
+        <h2> 你好 Flask! <h2>
+    {% endif %}
+</body>
+</html>

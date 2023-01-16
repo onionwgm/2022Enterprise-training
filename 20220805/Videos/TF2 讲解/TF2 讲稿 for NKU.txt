@@ -1,0 +1,556 @@
+20220706 TensorFlow 2.x 讲解 _ for NKU
+主要介绍：
+    TF2.x特点、TF2.x使用、TF2.x+CNN
+
+0. 数字图像的基本概念 - CV：计算机AI的大门
+    ？计算机中如何保存+操作生活中图像
+        == 离散化 -- 保存(兼顾后续CV操作)
+    0. 连续图像 & 离散(数字)图像
+        连续图像 : 人眼直接感受到图像
+        -- 经过采样 -- 
+        数字图像 : 连续图像进行数值化|离散化，一种近似
+            点阵汉字、矢量字体
+    1. 相关概念
+      -- 基本构成
+        像素(Pixel),最小单位 1080P、2k、4k、8k
+        h\w -- 决定清晰度
+      -- 位图 bmp == 24bit
+        记录每一个pixel值信息
+      -- 位图深度 -- 颜色 == 基于位图深度对图像进行分类
+        == 原始未经压缩的图片
+        1. 二值图像 
+            每个像素的值只有两种取值范围(0/1)
+            1bit == 位图深度=1
+          注意：
+            黑白图像、所有仅有两种颜色的图像
+            对图像进行预处理，往往进行二值化
+        2. 灰度图像
+            每个像素使用 1Byte\8bit == 256级|种 灰度
+            8bit == 位图深度=8
+          扩展：
+            任何一种颜色，可以划分为不同的灰度|亮度
+        -- ？ 识别图像，和颜色？？？
+        3. 彩色图像 -- RGB
+            每一个像素均要描述|保存 R、G、B
+                1 pixel 使用 3Byte\24bit == 24bit真彩色
+            10*10*24
+        4. RGBA --
+            + alpha == 亮度 32bit真彩色
+        5. 256色彩色图像
+            附带一个调色板
+            每个像素使用 1Byte\8bit，表示在调色板中颜色的索引
+      -- 图像格式 -- 压缩 == 基于图像在计算机中保存的格式进行分类
+        *1. bmp - 不支持压缩，不适用网页
+        2. jpeg - 有损压缩、压缩率高、使用网络
+            编辑一次，质量下降一次
+        *3. png - 无损压缩、老旧的浏览器不支持
+        4. GIF 分成格式、表示动画、支持 256 色 
+        5. TIFF 格式容器
+            浏览器不支持、数字出版领域...
+      -- 色彩模式 -- 仅仅RGB？ == 基于图像记录颜色的方案进行分类
+        *0. RGB 。。。
+        *1. CMYK --印刷领域 --32bit 
+        2. YCbCr --数字电视领域
+        3. HSI -- 色调、饱和度、亮度...
+      -- 图像类型 -- 图片、图像
+        -- 二维平面图像
+        1. 序列图像
+            视频 |||| 帧图像
+        2. 深度图像
+            类似灰度， 体现物体到摄像头之间的距离
+    2. 数字图像的表现形式 
+        1. 计算机 -- 文件方式：
+            不同格式、不同大小
+            按照上述相关概念保存成文件。
+        2. 计算机 -- 程序交互：
+            普通读写、操作   10*10 
+                二值化：二阶矩阵，每个元素取值范围：0/1
+                灰度：二阶矩阵，每个元素取值范围：0~255
+                RGB ：三阶矩阵 10*10*3
+                    二阶矩阵，每个元素取值范围：R==0~255
+                    二阶矩阵，每个元素取值范围：G==0~255
+                    二阶矩阵，每个元素取值范围：B==0~255
+                RGBA  ：三阶矩阵 10*10*4
+                    二阶矩阵，每个元素取值范围：R==0~255
+                    二阶矩阵，每个元素取值范围：G==0~255
+                    二阶矩阵，每个元素取值范围：B==0~255
+                    二阶矩阵，每个元素取值范围：A==0~255
+            机器学习： 
+                5 * 10 * 10 * 3
+                5 个图像样本元素（10 * 10 * 3）
+                    表示图像的矩阵 --展平-->> 向量
+                                  行主元保存
+    思考问题： 如何在机器学习应用中表示一张图片/图片样本集、存在问题...
+            维度过高 -- 维度爆炸
+
+所有资料： 
+    www.tensorflow.org/
+    https://tensorflow.google.cn/
+
+1. TF2.x 特性
+    0. 安装...
+    1. 定义 -- Google 
+        TensorFlow is an end-to-end open source platform for machine learning. 
+        端到端： 输入端-原始数据、数字图像 ； 输出端-直接就是结果，分类类别、回归值...
+        开源： github...
+        机器学习平台： 构成生态系统，DL、ML、第三方库、社区
+        三篇论文： ....
+    2. 发展历程
+        2017 tf1.0 
+        2019 tf2.0
+    3. TF1.x 特点 -- 静态图机制
+        延迟执行机制/静态图机制 == 两阶段执行
+        构建阶段： 
+            描述计算图、并没有实质性计算发生
+        执行阶段： --基于session 
+            在会话中执行计算图
+        例： 完成 a（2） + b（3）
+            a = tf.constant(2)
+            b = tf.constant(3)
+            c = tf.add(a, b)
+            ---
+            sess = tf.Session()
+            print(sess.run(c))
+            sess.close()
+        特点：
+            便于优化 -- 代码运行效率高
+            程序不够简洁
+    4. TF2.x 特点 -- 动态图机制(Eager)
+        直接写功能、直接看结果，解释执行方式
+            a = tf.constant(2)
+            b = tf.constant(3)
+            c = tf.add(a, b)    # 接着输出 c 的值  print(a+b)
+        特点： 
+            无需构建静态图、使用动态图完成 直接|立即计算&返回结果
+            快速的构建|调试模型
+            执行效率不高
+          tf2 中留存 tf1 的特点 
+            程序创立&调试阶段，使用 tf2 的动态图
+            部署阶段，使用 静态图 机制，提供性能/部署能力
+    == 二者对比
+        静态图 构建一次、多次执行，运行|执行前可以进行优化、便于部署
+        动态图 立即执行，无构建阶段、无优化概念
+    5. TF2.x架构
+        TensorFlow 2.x 架构.png
+        训练、保存、部署
+    6. TF2.x框架特性
+        多环境支撑、分布式、高效
+        社区支持
+      https://tensorflow.google.cn/
+        使用 TensorFlow 的公司
+    总结回顾
+        tf google 开源的 ml 框架|社区 
+        *tf2 支持 Eager 模式作为默认模式
+        tf2 包括 训练、保存、部署
+        支持更多的平台、语言、API
+
+2-0. 引入和准备
+  1. TF2.x 至少|必须要掌握的内容
+    程序 = 数据 + 算法
+    数据： 从数据的组织和表现形式上：
+        标量（scalar）：单一数值
+        向量（vector）：一组数值、一维数值、一维list
+        张量（tensor）：多组数值/n维数值、二维/多维数值、矩阵/高阶矩阵
+      ！！ 统一名词：
+        维度 = dim
+            有几个轴、空间概念
+            线性、平面、立体、高维空间
+            维度有次序|顺序的，从 0 开始... 
+            零维： 0 个轴、没有次序
+            一维： 1 个轴、次序为 0
+            二维： 2 个轴、次序为 0, 1
+            三维： 3 个轴、次序为 0, 1, 2
+            n维：  n 个轴、次序为 0, 1, 2, .. n-1
+        形状 = shape 
+            每个维度|轴上的 特征的数量
+            1               标量 
+                            维度(维的个数、轴的个数) 0
+                            特征的数量： 无 
+                            shape = ()
+            [1, 2, 3]       向量 
+                            维度(维的个数、轴的个数) 1
+                            第一个维度，次序为 0 的维度，特征的数量： 3
+                            shape = (3,)
+            [               二维张量
+                [1, 2, 3],  维度(维的个数、轴的个数) 2
+                [4, 5, 6]   第一个维度，次序为 0 的维度，特征的数量： 2
+            ]               第二个维度，次序为 1 的维度，特征的数量： 3
+                            shape = (2, 3)
+            .. n 维张量 ....
+        特征 = feature
+            每个维度|轴上的 每个具体的分量|数据
+      广义上：都是张量、维度值不同而已
+        张量(本质是是多维数组)：在计算机程序中表达？
+            Python 
+                列表-list、元素类型可以不同、可以嵌套 == 不连续的链式存储(动态指针数组) 
+                不适合数值计算、无 shape 概念
+            Numpy 
+                ndarray
+                专门为 高维数值、浮点型计算 设计
+                元素类型相同、元素占用内存空间相同、并且连续存放
+                只能在内存中、借助 CPU 使用操作|运算
+            TensorFlow 中的 Tensor
+                非常类似 numpy 中 ndarray、就是二次封装、API 和 numpy 刻意相同
+                在 CPU、GPU、TPU 上运行、保存数据在 GPU 存储中
+                    支持分布式计算（单机多卡、多机多卡）
+      所以 tf 对所有操作的数据 统称为 张量 (数据容器)
+      所以 
+        需要掌握： 张量 创建、获取|显示 值
+    算法： 基础 + 组合
+        基础操作 = 本质上是 数学运算
+            算术、矩阵、统计、微积分（导数）
+            ..... ==>> tf 
+        组合操作 = 本质上，基于张量、借助基础操作整合(按照一定步骤)
+            tf ==>> 构建出模型、分层构建，并指出各自需要的运算规则(基础&组合)、数据(张量)
+                构成一个图（静态/动态图）...
+                一次/多次 反复执行运算
+                求出结果(模型的中的参数)
+              使用模型 解决 实际/未知 问题(泛化)
+      所以： 
+        需要掌握 tf 基于张量、借助各种操作（基础&组合）构建组合操作（模型） == tf.keras 完成 
+        其他： 评估、保存、部署
+  2. 准备： 
+    0. 升级 tensorflow 
+        pip install -U tensorflow 
+      jupyter lab 
+    1.导入 tensorflow 
+    2. 查看相关信息
+        ....
+    3. 在 tf2 中使用 tf1 
+        import tensorflow.compat.v1 as tf1
+        tf1.disable_v2_behavior()
+        tf1...
+        错误的！！！
+        tf === tf2.x   
+        tf....
+
+2. 创建 tensor 
+    0. 定义 
+        tensorflow 中 数据载体|容器、类 Tensor 提供，张量都是 Tensor 实例对象
+            是对 numpy 中 array （ndarray）封装
+          标量： 0维|秩张量
+          向量： 1维|秩张量
+          矩阵： 2维|秩张量
+          多维/高阶矩阵： n维|秩张量
+      创建方法：
+        https://tensorflow.google.cn/api_docs/python/tf/constant?hl=zh-cn
+        使用 tf.constant(value, dtype=None, shape=None, name='Const') 方法实现 
+            参数： 
+                value ： 列表/numpy数组/数字/字符串/布尔型
+                dtype ： 元素的数据类型，也有默认的类型
+                shape ： 给出张量的形状==同时给出了张量的维度的数量信息
+                name ： 张量的命名系统给出的内部名称（属性）、一般使用默认
+        https://tensorflow.google.cn/api_docs/python/tf/convert_to_tensor?hl=zh-cn
+        使用 tf.convert_to_tensor( value, dtype=None, dtype_hint=None, name=None ) 方法实现
+            参数： value 要将此数据转化为 张量
+        value 唯一的一般必填项目，如果只有一个参数对应 value，可以不写参数的名称，直接写 数据值
+      --- 查看 张量 的值 
+        1. 张量.numpy()
+        2. 张量 
+        3. 查看类型 
+            # 查看张量的值
+            t0 = tf.constant([[1, 2], [3, 4]])
+            t0 
+            t0.numpy()
+            type(t0)
+            type(t0.numpy())
+    1. 创建张量01：value参数为 python list 列表 
+        list 可以是一个常量、变量
+        例： 
+            # 01:基于 python list 列表创建张量
+            pl = [[1, 2], [3, 4]]
+            t1 = tf.constant(pl)
+            "t1:", t1
+            "t1 value:", t1.numpy()
+            "t1 type:", type(t1)
+            "t1 value type:", type(t1.numpy())
+    2. 创建张量02：value参数为 numpy.ndarray 数组
+        默认 numpy 数组，如果元素是浮点型，创建的 tensor 元素的类型是 float64
+        tensor float 的默认类型是： float32
+        ===??? 如何将使用 numpy 浮点型数组 创建的 tensor，元素类型改为 float32 ???
+            1- 转换数据类型......
+            2- 创建时， 显示指明 tensor 数据类型，使用 dtype 参数执行 tensor 类型
+                t2_3 = tf.constant(np.array([1., 2.0]), dtype=tf.float32)
+              必须指明是 tf.float32
+        例： 
+            # 02:基于 numpy.ndarray 数组创建张量
+            import numpy as np
+            # 整型数组
+            t2 = tf.constant(np.array([1, 2]))
+            "t2:", t2
+            "t2 value:", t2.numpy()
+            "t2 type:", type(t2)
+            "t2 value type:", type(t2.numpy())
+            # 浮点型数组 - 默认 float64
+            t2_2 = tf.constant(np.array([1., 2.0]))
+            "t2_2:", t2_2
+            "t2_2 value:", t2_2.numpy()
+            "t2_2 type:", type(t2_2)
+            "t2_2 value type:", type(t2_2.numpy())
+            # 浮点型数组 - 显示指定为 float32
+            t2_3 = tf.constant(np.array([1., 2.0]), dtype=tf.float32)
+            "t2_3:", t2_3
+            "t2_3 value:", t2_3.numpy()
+            "t2_3 type:", type(t2_3)
+            "t2_3 value type:", type(t2_3.numpy())
+    3. 创建张量03：value参数为 数字
+        强调： 
+            0维|秩张量， 形状为空
+        例： 
+            # 03:基于 数字（单一数值）创建张量
+            t3 = tf.constant(1)
+            "t3:", t3
+            "t3.numpy():", t3.numpy()
+            "t3 type:", type(t3)
+            "t3 value type", type(t3.numpy())
+            t3_2 = tf.constant(2.)
+            "t3_2:", t3_2
+            "t3_2.numpy():", t3_2.numpy()
+            "t3_2 type:", type(t3_2)
+            "t3_2 value type", type(t3_2.numpy())
+            # 显示指定元素类型
+            # 建议： 多个参数时，最好给出：参数的名称=参数值
+            #t3_3 = tf.constant(2., dtype=tf.float64)
+            t3_3 = tf.constant(value = 2., dtype=tf.float64)
+            t3_3
+    4. 创建张量04：value参数为 布尔值
+        例：
+            # 04:基于 布尔值 创建张量
+            t4 = tf.constant([True, False])
+            "t4:", t4
+            "t4.numpy():", t4.numpy()
+            "t4 type:", type(t4)
+            "t4 value type", type(t4.numpy())
+            # True => 1/1.  False => 0/0.
+            tf.cast(t4, tf.int32)
+            tf.cast(t4, tf.float32)
+            # 非0 => True  0 => False
+            tmp = tf.constant([-1, 0, 1, 2.0])
+            tf.cast(tmp, tf.bool)
+    5. 创建张量05：value参数为 字符串
+        例： 
+            # 05:基于 字符串 创建张量
+            t5 = tf.constant("hello")
+            "t5:", t5
+            # Python 字符（串）以 unicode 编码表达
+            # Tensorflow 字符（串） 以字节数组的形式表达
+            # numpy=b'hello'
+            "t5.numpy():", t5.numpy()
+            "t5 type:", type(t5)
+            # bytes  == 字节数组
+            "t5 value type", type(t5.numpy())
+            # unicode === ascii == utf8
+            # english -- ascii == 1byte
+            # 比如：中文字符-2个字节 == 2byte表示一个字符，
+            # 此时，需要3个字节表示需要两个字节表述的中文字符，
+            # utf8 中，规定：第1个字节 最高位111.。。 后2个字节表示实际的字符编码
+            # 在 tf 中 中文字符占 3 个字节
+            tf.constant("天下")
+    6. 创建张量06：tf.convert_to_tensor()方法将现有数据(变量形式)转换为张量
+        例：
+            # 06:tf.convert_to_tensor()方法将现有数据转换为张量
+            import numpy as np
+            na = np.arange(12).reshape(3, 4)
+            na
+            type(na)
+            # 完成转换
+            ta = tf.convert_to_tensor(na)
+            "ta:", ta
+            "ta.numpy():", ta.numpy()
+            "ta type:", type(ta)
+            "ta value type", type(ta.numpy())
+            string_array = ["hello", "天下"]
+            t_strings = tf.constant(string_array)
+            t_strings.numpy()
+    7. 创建张量07：各种特殊张量
+        1. 全0张量/全1张量
+            https://tensorflow.google.cn/api_docs/python/tf/zeros?hl=zh-cn
+                tf.zeros(
+                    shape,
+                    dtype=tf.dtypes.float32,
+                    name=None
+                )
+            https://tensorflow.google.cn/api_docs/python/tf/ones?hl=zh-cn
+                tf.ones(
+                    shape,
+                    dtype=tf.dtypes.float32,
+                    name=None
+                )
+            https://tensorflow.google.cn/api_docs/python/tf/zeros_like?hl=zh-cn
+                tf.zeros_like(
+                    input, dtype=None, name=None
+                )
+            https://tensorflow.google.cn/api_docs/python/tf/ones_like?hl=zh-cn
+                tf.ones_like(
+                    input, dtype=None, name=None
+                )
+        2. 同值张量
+            https://tensorflow.google.cn/api_docs/python/tf/fill?hl=zh-cn
+                tf.fill(
+                    dims, value, name=None
+                )
+                dims -- 每个维度的形状数， 给出形状
+                value -- 同值填充的值
+        3. 随机分布张量
+            https://tensorflow.google.cn/api_docs/python/tf/random?hl=zh-cn
+            0- 随机数种子
+                https://tensorflow.google.cn/api_docs/python/tf/random/set_seed?hl=zh-cn
+                    tf.random.set_seed(
+                        seed
+                    )
+                目的：为了生成一致的随机张量
+                ！！ 如果要生成一样的随机数据，必须保证随机数种子一致 ！！
+            1- (张量中元素)正态分布随机张量 
+                https://tensorflow.google.cn/api_docs/python/tf/random/normal?hl=zh-cn
+                    tf.random.normal(
+                        shape,
+                        mean=0.0,
+                        stddev=1.0,
+                        dtype=tf.dtypes.float32,
+                        seed=None,
+                        name=None
+                    )
+            2- (张量中元素)正态分布(保证分布范围)随机张量 
+                https://tensorflow.google.cn/api_docs/python/tf/random/truncated_normal?hl=zh-cn
+                    tf.random.truncated_normal(
+                        shape,
+                        mean=0.0,
+                        stddev=1.0,
+                        dtype=tf.dtypes.float32,
+                        seed=None,
+                        name=None
+                    )
+            3- 均匀正态分布
+                https://tensorflow.google.cn/api_docs/python/tf/random/uniform?hl=zh-cn
+                    tf.random.uniform(
+                        shape,
+                        minval=0,
+                        maxval=None,
+                        dtype=tf.dtypes.float32,
+                        seed=None,
+                        name=None
+                    )
+                # 07:各种特殊张量
+                # 全0张量
+                tf.zeros(shape=(6))
+                tf.zeros(shape=[2, 3])
+                # 全1张量
+                tf.ones(shape=(6))
+                tf.ones(shape=[2, 3])
+                # like 。。
+                tf.zeros_like(tf.ones(shape=[2, 3]))
+                # 同值张量
+                tf.fill([2, 3], 9)
+                tf.fill([2, 3], 9.)
+                tf.fill([2,], "hello")
+                tf.fill([], True)
+                # 正态分布
+                tf.random.normal([2, 3])
+                tf.random.normal(shape=[2, 3, 4], mean=0.0, stddev=2.0)
+                # 截断正态分布
+                tf.random.truncated_normal(shape=[2, 3, 4], mean=0.0, stddev=2.0)
+                # 均匀分布
+                tf.random.set_seed(42)  # 每次生成的随机数据一致
+                tf.random.uniform(shape=(3, 3), minval=1, maxval=10, dtype='int32')
+                tf.random.set_seed(42)  # 每次生成的随机数据一致
+                tf.random.uniform(shape=(3, 3), minval=1, maxval=10, dtype='int32')
+                # 没有起作用。
+                #tf.random.uniform(shape=(3, 3), minval=1, maxval=10, dtype='int32', seed=42)
+                #tf.random.uniform(shape=(3, 3), minval=1, maxval=10, dtype='int32', seed=42)
+        4. 有序序列：tf.range()函数
+            https://tensorflow.google.cn/api_docs/python/tf/range?hl=zh-cn
+                tf.range(start=0, limit, delta=1, dtype=None, name='range')
+            例： 
+                # 序列张量,前闭后开空间
+                tf.range(10)
+                tf.range(start=1, limit=10, delta=2)
+    总结 
+        各种维度、各种类型、各种特殊/不特殊
+        维度： 
+            0维|秩张量 = 标量：数字、字符串、布尔值 
+            1维|秩张量 = 向量：数组、列表，其中元素：数字、字符串、布尔值 
+            n维|秩张量 = 张量：数组、列表，其中元素：数字、字符串、布尔值 
+        类型：
+            张量的类型 ： tf.Tensor
+            张量值的类型 ： numpy.数据类型 === numpy.ndarray / numpy.int32|numpy.float32|numpy.string
+            张量数据元素的类型 : 使用 dtype 
+                https://tensorflow.google.cn/api_docs/python/tf/dtypes?hl=zh-cn
+              所有的张量数据元素类型：
+              -- 主要的类型
+                tf.int8     8 位有符号整数
+                tf.int16    16 位有符号整数
+                tf.int32    32 位有符号整数
+                tf.int64    64 位有符号整数
+                tf.uint8    8 位无符号整数
+                tf.float32  32 位浮点数
+                tf.float64  64 位浮点数
+                tf.string   字符串（非Unicode编码的字节数组）
+                tf.bool     布尔型
+                tf.complex64    复数，实部和虚部分别为32位浮点型
+              注意： 
+                1- tf.float32 默认 float 类型， GPU运算快 
+                    基于 numpy.ndarray 创建 float 默认是 float64，
+                    1= 显示指定、2=进行转换--tf.cast(默认是 float64的numpy array, tf.float32)
+                        NN 中 32bit的数值精度足够 
+                2- True/False 
+                    0/1 0/非0
+                3- 字符串是以字节数组形式保存--字节字符串
+                    汉字占 3 个字节
+        特殊： 
+            0 1 特定值 随机分布<seed>（正态、截断正态分布、均匀） 序列
+      -- 用的 API
+        数据来源于常数型的数据(给定值、形式：常量、变量) == 创建任何 常量张量 
+            tf.constant(...)
+            tf.convert_to_tensor(....)
+            -- 建议规范===
+            == tf.constant 借助常量形式的给定值创建张量
+            == tf.convert_to_tensor 借助变量形式的给定值创建张量
+            常数型的数据是特定值
+                tf.zeros\tf.ones\tf.fill
+                    tf.fill(shape_value, fill_value) == tf.constant(fill_value, shape_value)
+                    tf.fill(dims=[2, 3], value=9)
+                    # tf.constant(value=9, shape=[2,3])
+                    tf.constant(shape=[2,3], value=9)
+        数据来源于随机数据 
+            tf.random.normal\tf.random.truncated_normal\tf.random.uniform
+        数据来源于指定的序列 
+            tf.range
+    关于变量...
+        暂时理解：
+            tf.constant 基于常量（常数型的数据）创建
+                其值不能改变...
+            tf.Variable 基于常量（常数型的数据）创建
+                其数据元素的值可以改变、用于NN中的参数的表征
+        https://tensorflow.google.cn/api_docs/python/tf/Variable?hl=zh-cn
+            tf.Variable(
+                initial_value=None,
+                trainable=None,
+                validate_shape=True,
+                caching_device=None,
+                name=None,
+                variable_def=None,
+                dtype=None,
+                import_scope=None,
+                constraint=None,
+                synchronization=tf.VariableSynchronization.AUTO,
+                aggregation=tf.compat.v1.VariableAggregation.NONE,
+                shape=None
+            )
+        例： 
+            # 关于变量
+            ct = tf.constant([-1, 0, 1, 2])
+            # 转换为变量类型
+            vt = tf.Variable(ct)
+            vt
+            vt.name, vt.trainable
+            v = tf.Variable(1.)
+            v.assign(2.)
+            v.assign_add(0.5)
+    关于 numpy()
+        CPU : tensor 和 numpy.ndarry 同时共享同一段内存空间，使用 numpy() 方法速度快
+        GPU : tensor显存空间，使用 numpy() 需要从显存中传递到内存、速度较慢
+
+
+[True, False]
+[-1, 0, 1, 2.0]
+[[1, 2], [3, 4]]

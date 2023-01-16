@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <!-- CSS静态资源的引用 -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css', _external=True) }}"/>
+</head>
+<body>
+    <h1>搜索框</h1>
+    <form id="searchForm" name="searchForm" method="post" action="/search/">
+        <p>
+            <label class="input_label">搜索框：</label>
+            <input class="input_data" type="text" id="keywords" name="keywords" required/>
+        </p>
+        <p>
+            <button class="btnsubmit" type="submit">搜索</button>
+        </p>
+    </form>
+    <p>
+        {{ msg }}
+    </p>
+</body>
+</html>
